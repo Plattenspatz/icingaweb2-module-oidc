@@ -8,7 +8,7 @@ use Icinga\Application\Icinga;
 use Icinga\Authentication\Auth;
 use Icinga\User;
 use ipl\Web\Url;
-
+use Icinga\Module\Oidc\CookieHelper;
 
 class Authentication extends AuthenticationHook
 {
@@ -24,7 +24,8 @@ class Authentication extends AuthenticationHook
 
         if ($relogin) {
             $oidcProviderID = $user->getAdditional('provider_id');
-            setcookie("oidc-internalurl", null, time() - 3600, str_replace("//","/",Icinga::app()->getRequest()->getBasePath()."/"));
+            $cookiePath = str_replace("//", "/", Icinga::app()->getRequest()->getBasePath() . "/");
+            CookieHelper::delete('oidc-internalurl', $cookiePath);
 
             if($oidcProviderID !== null){
                 Auth::getInstance()->removeAuthorization();

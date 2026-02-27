@@ -11,17 +11,19 @@ use ipl\Html\Html;
 use ipl\Stdlib\Filter;
 use ipl\Web\Compat\StyleWithNonce;
 use ipl\Web\Url;
+use Icinga\Module\Oidc\CookieHelper;
 
 class LoginFormModifierHelper
 {
 
     public static function init()
     {
-        if(! empty($_GET['redirect'])){
-            setcookie("oidc-redirect", $_GET['redirect'], time() + 300, str_replace("//","/",Icinga::app()->getRequest()->getBasePath()."/"));
-        }else{
-            setcookie("oidc-redirect", "", time() -3600, str_replace("//","/",Icinga::app()->getRequest()->getBasePath()."/"));
+        $cookiePath = str_replace("//", "/", Icinga::app()->getRequest()->getBasePath() . "/");
 
+        if (! empty($_GET['redirect'])) {
+            CookieHelper::set('oidc-redirect', $_GET['redirect'], time() + 300, $cookiePath);
+        } else {
+            CookieHelper::delete('oidc-redirect', $cookiePath);
         }
         $relogin = Config::module('oidc')->get("experimental","relogin", "0") === "1";
 
@@ -34,11 +36,6 @@ class LoginFormModifierHelper
                 }
             }
         }
-
-
-
-
-
     }
     public static function renderAfterForm()
     {
