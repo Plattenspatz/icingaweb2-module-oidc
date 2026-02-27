@@ -28,12 +28,21 @@ class FileHelper
 
         return $files;
     }
-    public function filelistAsSelect(){
-        $result =[];
-        $files= $this->fetchFileList();
-        foreach ($files as $file){
-            $result[$file]=$file;
+    
+    public function filelistAsSelect()
+    {
+        $result = [];
+        $files = $this->fetchFileList();
+
+        foreach ($files as $fileName) {
+            // Only expose files that pass getFile() validation
+            if ($this->getFile($fileName) === false) {
+                continue;
+            }
+
+            $result[$fileName] = $fileName;
         }
+
         return $result;
     }
 
