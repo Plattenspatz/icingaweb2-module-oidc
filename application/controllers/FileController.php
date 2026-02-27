@@ -57,7 +57,7 @@ class FileController extends CompatController
         $fileHelper = new FileHelper($this->path);
         $file = $fileHelper->getFile($fileToGet);
         if ($file !== false) {
-            unlink($file['realPath']);
+            unlink($file['path']);
             $this->redirectNow('oidc/file');
             return;
         }
