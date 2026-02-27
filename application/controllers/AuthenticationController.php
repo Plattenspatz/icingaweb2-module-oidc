@@ -21,6 +21,7 @@ use Icinga\Util\StringHelper;
 use ipl\Html\Html;
 use ipl\Stdlib\Filter;
 use Jumbojett\OpenIDConnectClient;
+use Icinga\Module\Oidc\CookieHelper;
 
 /**
  * Application wide controller for authentication
@@ -74,7 +75,8 @@ class AuthenticationController extends \Icinga\Controllers\AuthenticationControl
             $relogin = Config::module('oidc')->get("experimental","relogin", "0") === "1";
 
             if ($relogin) {
-                setcookie("oidc-internalurl", $oidcUrl, time() + 60 * 60 * 24 * 3, str_replace("//","/",Icinga::app()->getRequest()->getBasePath()."/")); // needs to be a cookie to work after logout
+                $cookiePath = str_replace("//", "/", Icinga::app()->getRequest()->getBasePath() . "/");
+                CookieHelper::set('oidc-internalurl', $oidcUrl, time() + 60 * 60 * 24 * 3, $cookiePath); // needs to be a cookie to work after logout
             }
 
 
@@ -93,7 +95,8 @@ class AuthenticationController extends \Icinga\Controllers\AuthenticationControl
 
                 if (!empty($_COOKIE['oidc-redirect'])) {
                     $redirect = $_COOKIE['oidc-redirect'];
-                    setcookie("oidc-redirect", "", time() - 3600, str_replace("//","/",Icinga::app()->getRequest()->getBasePath()."/"));
+                    $cookiePath = str_replace("//", "/", Icinga::app()->getRequest()->getBasePath() . "/");
+                    CookieHelper::delete('oidc-redirect', $cookiePath);
                 }
 
                 $authSuccess = true;
