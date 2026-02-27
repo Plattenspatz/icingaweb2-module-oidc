@@ -61,8 +61,7 @@ class FileController extends CompatController
             $this->redirectNow('oidc/file');
             return;
         }
-        throw new HttpException(401,"Don't do this again...");
-
+        throw new HttpException(404, "File not found");
     }
     public function uploadAction()
     {
@@ -86,23 +85,23 @@ class FileController extends CompatController
         $fileToGet = $this->params->shift('name');
         $fileHelper = new FileHelper($this->path);
         $file = $fileHelper->getFile($fileToGet);
-        $h1 = Html::tag('h1',null,"File: ".$fileToGet);
+
+        if ($file === false) {
+            throw new HttpException(404, "File not found");
+        }
+
+        $h1 = Html::tag('h1', null, "File: " . $fileToGet);
         $this->addContent($h1);
 
-        if ($file !== false) {
-            $fileContent = file_get_contents($file['realPath']);
-            $mimeType = mime_content_type($file['realPath']);
-            if(strpos($mimeType,'image') !== false){
-                $fileRenderer= Html::tag('img',['src'=>'data:'.$mimeType.";base64, ".base64_encode($fileContent)]);
-            }else{
-                $fileRenderer= Html::tag('pre',null,$fileContent);
-            }
-            $this->addContent($fileRenderer);
-
-            return;
+        $fileContent = file_get_contents($file['realPath']);
+        $mimeType = mime_content_type($file['realPath']);
+        if (strpos($mimeType, 'image') !== false) {
+            $fileRenderer = Html::tag('img', ['src' => 'data:' . $mimeType . ";base64, " . base64_encode($fileContent)]);
+        } else {
+            $fileRenderer = Html::tag('pre', null, $fileContent);
         }
-        throw new HttpException(401,"Don't do this again...");
-
+        $this->addContent($fileRenderer);
+        return;
     }
 
 
@@ -121,16 +120,23 @@ class FileController extends CompatController
         $files = $fileHelper->fetchFileList();
 
 
-        $data =[];
-        foreach ($files as $file) {
-            $file = $fileHelper->getFile($file);
-            $item = ['name'=>$file['name'], 'size'=>$file['size'], 'downloadname'=>$file['name']];
-            $data[]= (object) $item;
+        $data = [];
+        foreach ($files as $fileName) {
+            $file = $fileHelper->getFile($fileName);
+            if ($file === false) {
+                // Skip blocked/invalid entries (e.g. symlinks escaping base dir)
+                continue;
+            }
+
+            $item = [
+                'name' => $file['name'],
+                'size' => $file['size'],
+                'downloadname' => $file['name'],
+            ];
+            $data[] = (object) $item;
         }
 
         $this->addContent((new FilesTable())->setData($data));
-
-
     }
 
 
@@ -156,8 +162,7 @@ class FileController extends CompatController
             readfile($file['realPath']);
             exit;
         }
-
-
+        throw new HttpException(404, "File not found");
     }
 
 
